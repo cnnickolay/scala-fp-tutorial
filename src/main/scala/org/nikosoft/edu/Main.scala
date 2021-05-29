@@ -2,7 +2,7 @@ package org.nikosoft.edu
 
 import org.nikosoft.edu.CounterM.count
 import org.nikosoft.edu.Edu.MonadWrapper
-import org.nikosoft.edu.Or.{OrM, unsafe}
+import org.nikosoft.edu.OrM.{OrM, unsafe}
 
 object Main extends App {
   val result = for {
