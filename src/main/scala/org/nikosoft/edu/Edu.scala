@@ -22,9 +22,7 @@ object Edu extends App {
   }
 
   implicit class MonadWrapper[K](value: K) {
-    def pure[M[T] <: Monad[T, M]](implicit pureM: Pure[M]): M[K] = {
-      pureM.pure(value)
-    }
+    def pure[M[T] <: Monad[T, M]](implicit pureM: Pure[M]): M[K] = pureM.pure(value)
   }
 
   implicit class MonadicBinding[T, F[T1] <: Monad[T1, F]](leftM: F[T]) {
@@ -40,8 +38,13 @@ object Edu extends App {
   }
 
   implicit class MonadicMap[A, B](f: A => B) {
-    def `<$>`[F[T] <: Monad[T, F]](right: F[A]): F[B] = right.map(f)
+    def `<&>`[F[T] <: Monad[T, F]](right: F[A]): F[B] = right.map(f)
+    def `<@>`[F[T] <: Monad[T, F]](right: F[A]): F[B] = right.map(f)
     def fmap[F[T] <: Monad[T, F]](right: F[A]): F[B] = right.map(f)
+  }
+
+  implicit class MonadicMapReverse[A, F[T] <: Monad[T, F]](right: F[A]) {
+    def `<&>`[B](f: A => B): F[B] = right.map(f)
   }
 
   // pure
@@ -68,9 +71,15 @@ object Edu extends App {
 
   def f: Int => String => Double => BigDecimal => Unit = _ => _ => _ => _ => 1.0
 
-  val appMonad = f.pure <*> 5.pure <*> "".pure <*> 0.1.pure <*> BigDecimal.valueOf(0).pure
+  def tuple4[A, B, C, D]: A => B => C => D => (A, B, C, D) = a => b => c => d => (a, b, c, d)
+
+  val appMonad = tuple4[Int, String, Double, BigDecimal].pure <*> 5.pure <*> "".pure <*> 0.1.pure <*> BigDecimal.valueOf(0).pure <&> { case (a, b, c, d) => () }
+
+  case class Person(name: String, lastName: String)
 
   for {
+    person <- (Person.apply _).curried <@> "Niko".pure <*> "Che".pure
+    _ = println(person)
     _ <- appMonad
     a1 <- 1.0.pure
     a2 <- stringGeneratorM(a1)
