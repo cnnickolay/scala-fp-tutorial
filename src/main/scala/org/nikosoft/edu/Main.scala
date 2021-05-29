@@ -1,6 +1,8 @@
 package org.nikosoft.edu
 
-import org.nikosoft.edu.Or.unsafe
+import org.nikosoft.edu.CounterM.count
+import org.nikosoft.edu.Edu.MonadWrapper
+import org.nikosoft.edu.Or.{OrM, unsafe}
 
 object Main extends App {
   val result = for {
@@ -16,4 +18,15 @@ object Main extends App {
 
   println(result.or)
   println(result2.or)
+
+  val total = (for {
+    t1 <- count(10)
+    t2 <- count(10)
+    _ <- count(10)
+    _ <- count(10)
+  } yield ()).value.total
+
+  println(s"Total $total")
+
+
 }
