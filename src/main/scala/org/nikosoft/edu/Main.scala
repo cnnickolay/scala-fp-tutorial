@@ -1,5 +1,6 @@
 package org.nikosoft.edu
 
+import org.nikosoft.edu.ComputeRT.{ComputeRTWrap, ComputeRTWrapSome}
 import org.nikosoft.edu.CounterM.count
 import org.nikosoft.edu.OrM.unsafe
 
@@ -27,5 +28,10 @@ object Main extends App {
 
   println(s"Total $total")
 
-
+  val computation = for {
+    comp1 <- {Some(10 + 20)}.liftMust
+    comp2 <- {Some(comp1 + 20)}.liftMust
+    comp3 <- {Some((comp2 - 50) / 0)}.liftMust
+  } yield comp3
+  println(s"Computation ${computation.compute}")
 }
