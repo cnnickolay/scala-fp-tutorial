@@ -29,8 +29,22 @@ object Edu extends App {
     def `>>=`[K](f: T => F[K]): F[K] = leftM.flatMap(value => f(value))
   }
 
-  implicit class Applicative[A, B, F[T] <: Monad[T, F]](leftM: F[A => B]) {
-    def `<*>`(f: F[A]): F[B] = f.flatMap(a => leftM.map(fa => fa(a)))
+  trait Applicative[A, B, F[T] <: Monad[T, F]] {
+    protected def `<*>`(leftM: F[A => B], f: F[A]): F[B] = f.flatMap { a =>
+        leftM.map{ fa =>
+          fa(a)
+        }
+      }
+  }
+  implicit class ApplicativeConsolise[A, B](leftM: Consoliser[A => B]) extends Applicative[A, B, Consoliser] {
+    def `<*>`(f: Consoliser[A]): Consoliser[B] = super.`<*>`(leftM, f)
+  }
+  implicit class ApplicativeCompute[A, B](leftM: ComputeRT[A => B]) extends Applicative[A, B, ComputeRT] {
+    def `<*>`(f: ComputeRT[A]): ComputeRT[B] = (leftM.compute, f.compute) match {
+      case (Errors(errs), Error(err)) => new ComputeRT[B](Errors(err +: errs), leftM.rt)
+      case (_, Error(err)) => new ComputeRT[B](Errors(List(err)), leftM.rt)
+      case _ => super.`<*>`(leftM, f)
+    }
   }
 
   implicit class MonadicComposition[T, K, F[K1] <: Monad[K1, F]](leftM: T => F[K]) {
@@ -75,10 +89,10 @@ object Edu extends App {
 
   val appMonad = tuple4[Int, String, Double, BigDecimal].pure <*> 5.pure <*> "".pure <*> 0.1.pure <*> BigDecimal.valueOf(0).pure <&> { case (a, b, c, d) => () }
 
-  case class Person(name: String, lastName: String)
+  case class Person(name: String, lastName: String, phone: Option[String])
 
   for {
-    person <- (Person.apply _).curried <@> "Niko".pure <*> "Che".pure
+    person <- (Person.apply _).curried <@> "Niko".pure <*> "Che".pure <*> Option("0928344").pure
     _ = println(person)
     _ <- appMonad
     a1 <- 1.0.pure
