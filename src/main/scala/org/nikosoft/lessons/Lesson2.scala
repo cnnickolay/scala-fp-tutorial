@@ -7,7 +7,9 @@ object Lesson2 {
   // the intention
   case class Person(name: String, lastName: String, phone: Option[String])
 
-  val person = new Consoliser((Person.apply _).curried) <*> new Consoliser("Niko") <*> new Consoliser("Che") <*> new Consoliser(Option("0928344"))
+  private val createPerson: String => String => Option[String] => Person = (Person.apply _).curried
+
+  val person: Consoliser[Person] = pure(createPerson) <*> pure("Niko") <*> pure("Che") <*> pure(Option("0928344"))
 
   // Applicative type and implementation
   trait Applicative[A, B] {
