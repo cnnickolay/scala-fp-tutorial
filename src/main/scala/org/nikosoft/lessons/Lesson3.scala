@@ -1,30 +1,56 @@
 package org.nikosoft.lessons
 
-//import org.nikosoft.lessons.Lesson1._
-//
-//object Lesson3 {
-//
-//  // the intention
-//  case class Person(name: String, lastName: String, phone: Option[String])
-//
-//  private val createPerson: String => String => Option[String] => Person = (Person.apply _).curried
-//
-//  val person: Consoliser[Person] = Consoliser(createPerson) <*> Consoliser("Niko") <*> Consoliser("Che") <*> Consoliser(Option("0928344"))
-//
-//  // Applicative type and implementation
-//  trait Applicative[A, B] {
-//    protected def `<*>`[F[T] <: Monad[T, F]](leftM: F[A => B], f: F[A]): F[B] = f.bind(a =>
-//      leftM.fmap { fa =>
-//        fa(a)
-//      }(leftM))(f)
-//  }
-//
-//  implicit class ApplicativeConsolise[A, B](leftM: Consoliser[A => B]) extends Applicative[A, B] {
-//    def `<*>`(f: Consoliser[A]): Consoliser[B] = super.`<*>`[Consoliser](leftM, f)
-//  }
-//
-//  def main(args: Array[String]): Unit = {
-//    // run
-//    println(person.value)
-//  }
-//}
+import org.nikosoft.lessons.Lesson1._
+import org.nikosoft.lessons.Lesson2.ScalaMonadWrapper._
+import org.nikosoft.lessons.Lesson3.Or._
+
+import scala.util.{Failure, Success, Try}
+
+// creating a first useful monad
+object Lesson3 {
+
+  // first goes ADT
+  trait Or[+T]
+
+  object Or {
+    case class Good[T](value: T) extends Or[T]
+    case class Bad(throwable: Throwable) extends Or[Nothing]
+    class Ugly[T](input: => T) extends Or[T] {
+      def value: T = input
+    }
+    object Ugly {
+      def apply[T](v: => T): Ugly[T] = new Ugly(v)
+    }
+
+    implicit val orM: Monad[Or] = new Monad[Or] {
+      override def bind[A, B]: (A => Or[B]) => Or[A] => Or[B] = f => {
+        case gM: Good[A] => f(gM.value)
+        case bM: Bad => bM
+        case uM: Ugly[A] => Try(uM.value).fold(t => Bad(t), g => f(g))
+      }
+
+      override def fmap[A, B]: (A => B) => Or[A] => Or[B] = f => {
+        case gM: Good[A] => Good(f(gM.value))
+        case bM: Bad => bM
+        case uM: Ugly[A] => Ugly(f(uM.value))
+      }
+    }
+
+    def good[T](v: T): Or[T] = Good(v)
+    def bad[T](t: Throwable): Or[T] = Bad(t)
+    def ugly[T](v: => T): Or[T] = Ugly(v)
+    def compute[T](v: Or[T]): Or[T] = v >>= good
+  }
+
+  def main(args: Array[String]): Unit = {
+    // let's put it together
+    val result = for {
+      i <- ugly(10 - 19)
+      r <- ugly(i / 0)
+      k <- good(r)
+      res <- ugly(k + 10)
+    } yield res + 10
+
+    println(result)
+  }
+}

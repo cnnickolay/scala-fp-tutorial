@@ -1,47 +1,30 @@
 package org.nikosoft.lessons
 
-/*
-import org.nikosoft.lessons.Lesson1.Monad
-import org.nikosoft.lessons.Lesson4.Or._
-import org.nikosoft.lessons.Lesson4.OrM.unsafe
-
-import scala.util.{Failure, Success, Try}
-
-// creating a first useful monad
-object Lesson4 {
-
-  // first goes ADT
-  trait Or[+T]
-
-  object Or {
-    case class Good[T](value: T) extends Or[T]
-    case class Bad(throwable: Throwable) extends Or[Nothing]
-  }
-
-  // then goes implementation
-  class OrM[T](val or: Or[T]) extends Monad[T, OrM] {
-    override def map[K](t: T => K): OrM[K] = or match {
-      case Good(value) => OrM(Good(t(value)))
-      case bad: Bad => OrM(bad)
-    }
-    override def flatMap[K](f: T => OrM[K]): OrM[K] = or match {
-      case Good(value) => f(value)
-      case bad: Bad => OrM(bad)
-    }
-  }
-  object OrM {
-    def apply[T](t: Or[T]): OrM[T] = new OrM[T](t)
-    def unsafe[T](f: => T): OrM[T] = Try(f) match {
-      case Success(value) => OrM(Good(value))
-      case Failure(exception) => OrM(Bad(exception))
-    }
-  }
-
-  // let's put it together
-/*
-  for {
-    _ <- unsafe()
-  } yield ()
-*/
-}
-*/
+//import org.nikosoft.lessons.Lesson1._
+//
+//object Lesson4 {
+//
+//  // the intention
+//  case class Person(name: String, lastName: String, phone: Option[String])
+//
+//  private val createPerson: String => String => Option[String] => Person = (Person.apply _).curried
+//
+//  val person: Consoliser[Person] = Consoliser(createPerson) <*> Consoliser("Niko") <*> Consoliser("Che") <*> Consoliser(Option("0928344"))
+//
+//  // Applicative type and implementation
+//  trait Applicative[A, B] {
+//    protected def `<*>`[F[T] <: Monad[T, F]](leftM: F[A => B], f: F[A]): F[B] = f.bind(a =>
+//      leftM.fmap { fa =>
+//        fa(a)
+//      }(leftM))(f)
+//  }
+//
+//  implicit class ApplicativeConsolise[A, B](leftM: Consoliser[A => B]) extends Applicative[A, B] {
+//    def `<*>`(f: Consoliser[A]): Consoliser[B] = super.`<*>`[Consoliser](leftM, f)
+//  }
+//
+//  def main(args: Array[String]): Unit = {
+//    // run
+//    println(person.value)
+//  }
+//}
