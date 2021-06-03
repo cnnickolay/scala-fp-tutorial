@@ -4,28 +4,16 @@ import org.nikosoft.lessons.Lesson1._
 
 object Lesson2 {
 
-  // the intention
-  case class Person(name: String, lastName: String, phone: Option[String])
-
-  private val createPerson: String => String => Option[String] => Person = (Person.apply _).curried
-
-  val person: Consoliser[Person] = pure(createPerson) <*> pure("Niko") <*> pure("Che") <*> pure(Option("0928344"))
-
-  // Applicative type and implementation
-  trait Applicative[A, B] {
-    protected def `<*>`[F[T] <: Monad[T, F] : Pure](leftM: F[A => B], f: F[A]): F[B] = f.flatMap { a =>
-      leftM.map{ fa =>
-        fa(a)
-      }
-    }
+  class ScalaMonad[T, F[T1] <: Monad[T1, F]](m: F[T]) {
+    def flatMap[B](f: T => F[B]): F[B] = m.bind(f)(m)
+    def map[B](f: T => B): F[B] = m.fmap(f)(m)
   }
 
-  implicit class ApplicativeConsolise[A, B](leftM: Consoliser[A => B]) extends Applicative[A, B] {
-    def `<*>`(f: Consoliser[A]): Consoliser[B] = super.`<*>`[Consoliser](leftM, f)
-  }
+  implicit def scalaifyMonad[T, F[T1] <: Monad[T1, F]](monad: F[T]): ScalaMonad[T, F] = new ScalaMonad[T, F](monad)
 
   def main(args: Array[String]): Unit = {
-    // run
-    println(person.value)
+      val a = Consoliser(1.0).flatMap(stringGeneratorM).flatMap(integiserM).flatMap(bigDecimaliserM).value
+      println(s"Effectful function via flatMap result ${Consoliser(1.0).flatMap(stringGeneratorM).flatMap(integiserM).flatMap(bigDecimaliserM).value}")
   }
+
 }

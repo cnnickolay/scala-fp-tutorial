@@ -39,7 +39,7 @@ object MonadH {
     override def map[B](f: T => B): F[B] = m.fmap(f)(m)
   }
 
-  implicit def scalifyMonad[T, F[T1] <: Monad[T1, F]](monad: F[T]): ScalaM[T, F] = new ScalaMonad[T, F](monad)
+  implicit def scalaifyMonad[T, F[T1] <: Monad[T1, F]](monad: F[T]): ScalaM[T, F] = new ScalaMonad[T, F](monad)
 
   // running
   val result = for {
