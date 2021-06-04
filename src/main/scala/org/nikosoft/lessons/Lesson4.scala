@@ -29,8 +29,9 @@ object Lesson4 {
     override def pure[T]: T => Or[T] = good
   }
 
+  val createPerson: String => String => Option[String] => Person = (Person.apply _).curried
+
   def main(args: Array[String]): Unit = {
-    val createPerson: String => String => Option[String] => Person = (Person.apply _).curried
     val person: Or[Person] = good(createPerson) <*> ugly(throw new RuntimeException("sorry1")) <*> ugly(throw new RuntimeException("sorry")) <*> good(Option("0928344"))
     println(person)
   }
