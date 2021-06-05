@@ -1,6 +1,5 @@
 package org.nikosoft.lessons
 
-import org.nikosoft.lessons.Lesson1._
 import org.nikosoft.lessons.Lesson3.Or
 import org.nikosoft.lessons.Lesson3.Or.{good, _}
 import org.nikosoft.lessons.Lesson4.{Applicative, Person, createPerson}
@@ -13,19 +12,21 @@ object Lesson5 {
     override def fmap[A, B]: (A => B) => Or[A] => Or[B] = orM.fmap
     override def pure[T]: T => Or[T] = good
     override def `<*>`[A, B](f: Or[A => B], fa: Or[A]): Or[B] = {
-      val value = super.`<*>`(f, fa)
-      (f, fa) match {
-        case (Bad(t1), _: Ugly[A]) => value match {
-          case Bad(t2) => bad(new Throwable(s"${t1.getMessage}, ${t2.getMessage}"))
-          case _ => value
-        }
-        case _ => value
+      val fb = super.`<*>`(f, fa)
+      (f, fb) match {
+        case (Bad(t1), Bad(t2)) if t1.getMessage != t2.getMessage =>
+          bad(new Throwable(s"${t1.getMessage}, ${t2.getMessage}"))
+        case _ => fb
       }
     }
   }
 
   def main(args: Array[String]): Unit = {
-    val person: Or[Person] = good(createPerson) <*> ugly(throw new RuntimeException("name is wrong")) <*> ugly(throw new RuntimeException("lastname is wrong")) <*> good(Option("0928344"))
+    val person: Or[Person] = good(createPerson) <*>
+      ugly(throw new Throwable("name is wrong")) <*>
+      ugly(throw new Throwable("lastname is wrong")) <*>
+      good(Option("0928344")) <*>
+      bad(new Throwable("address does not exist"))
     println(person)
   }
 

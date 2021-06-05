@@ -8,7 +8,7 @@ import org.nikosoft.lessons.Lesson3.Or.{good, _}
 object Lesson4 {
 
   // the intention
-  case class Person(name: String, lastName: String, phone: Option[String])
+  case class Person(name: String, lastName: String, phone: Option[String], address: String)
 
   trait Pure[F[_]] {
     def pure[T]: T => F[T]
@@ -29,10 +29,10 @@ object Lesson4 {
     override def pure[T]: T => Or[T] = good
   }
 
-  val createPerson: String => String => Option[String] => Person = (Person.apply _).curried
+  val createPerson: String => String => Option[String] => String => Person = (Person.apply _).curried
 
   def main(args: Array[String]): Unit = {
-    val person: Or[Person] = good(createPerson) <*> ugly(throw new RuntimeException("sorry1")) <*> ugly(throw new RuntimeException("sorry")) <*> good(Option("0928344"))
+    val person: Or[Person] = good(createPerson) <*> ugly(throw new RuntimeException("sorry1")) <*> ugly(throw new RuntimeException("sorry")) <*> good(Option("0928344")) <*> good("sydney")
     println(person)
   }
 }
