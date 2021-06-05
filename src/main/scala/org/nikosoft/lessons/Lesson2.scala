@@ -1,6 +1,7 @@
 package org.nikosoft.lessons
 
 import org.nikosoft.lessons.Lesson1._
+import scala.language.implicitConversions
 
 object Lesson2 {
 
@@ -9,14 +10,32 @@ object Lesson2 {
     def map[B](f: T => B): F[B] = implicitly[Monad[F]].fmap(f)(m)
   }
 
-  object ScalaMonadWrapper {
-    implicit def scalaify[A, F[_] : Monad](f: F[A]): ScalaMonadWrapper[A, F] = new ScalaMonadWrapper[A, F](f)
+  implicit def scalaify[A, F[_] : Monad](f: F[A]): ScalaMonadWrapper[A, F] = new ScalaMonadWrapper[A, F](f)
+
+  implicit class MonadRich[A, F[_] : Monad](left: F[A]) {
+    def `>>=`[B](f: A => F[B]): F[B] = {
+      val monad = implicitly[Monad[F]]
+      monad.bind(f)(left)
+    }
+
+    def `<&>`[B](f: A => B): F[B] = {
+      val monad = implicitly[Monad[F]]
+      monad.fmap(f)(left)
+    }
   }
 
   def main(args: Array[String]): Unit = {
-    import ScalaMonadWrapper._
-    val a = Consoliser(1.0).flatMap(stringGeneratorM).flatMap(integiserM).flatMap(bigDecimaliserM).value
-    println(s"Effectful function via flatMap result ${Consoliser(1.0).flatMap(stringGeneratorM).flatMap(integiserM).flatMap(bigDecimaliserM).value}")
+    val a = SafeExec(CommandLineArguments(Nil)).flatMap(readUserNameM).flatMap(connectToDatabaseM).flatMap(readFromDatabaseM).value
+    println(s"Effectful function via flatMap result $a")
+
+    for {
+      name      <- readUserNameM(CommandLineArguments(Nil))
+      dbAdapter <- connectToDatabaseM(name)
+      result    <- readFromDatabaseM(dbAdapter)
+    } yield result
+
+    val programM = readUserNameM(CommandLineArguments(Nil)) >>= connectToDatabaseM >>= readFromDatabaseM
+    println(programM)
   }
 
 }

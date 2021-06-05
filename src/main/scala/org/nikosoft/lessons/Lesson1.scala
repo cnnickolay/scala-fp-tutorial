@@ -2,19 +2,25 @@ package org.nikosoft.lessons
 
 object Lesson1 {
 
-  // pure functions and composition
-  def stringGenerator: Double => String = _.toString
-  def integiser: String => Int = _.toDouble.toInt
-  def bigDecimaliser: Int => BigDecimal = v => BigDecimal.valueOf(v)
+  case class CommandLineArguments(value: List[String])
+  case class UserName(value: String)
+  case class Password(value: String)
+  case class DBAdapter()
+  case class Result(value: String)
 
-  def megaFunc = stringGenerator andThen integiser andThen bigDecimaliser
+  // pure functions and composition
+  def readUserName: CommandLineArguments => (UserName, Password) = _ => (UserName("Fan"), Password("Tozzi"))
+  def connectToDatabase: ((UserName, Password)) => DBAdapter = _ => DBAdapter()
+  def readFromDatabase: DBAdapter => Result = _ => Result("Some secret data")
+
+  def program: CommandLineArguments => Result = readUserName andThen connectToDatabase andThen readFromDatabase
 
   // effectful functions and composition
-  def stringGeneratorM: Double => Consoliser[String] = d => Consoliser(d.toString)
-  def integiserM: String => Consoliser[Int] = s => Consoliser(s.toDouble.toInt)
-  def bigDecimaliserM: Int => Consoliser[BigDecimal] = v => Consoliser(BigDecimal.valueOf(v))
+  def readUserNameM: CommandLineArguments => SafeExec[(UserName, Password)] = _ => SafeExec(UserName("Fan"), Password("Tozzi"))
+  def connectToDatabaseM: ((UserName, Password)) => SafeExec[DBAdapter] = _ => SafeExec(DBAdapter())
+  def readFromDatabaseM: DBAdapter => SafeExec[Result] = _ => SafeExec(Result("Some secret data"))
 
-  def megaFuncM = stringGeneratorM >=> integiserM >=> bigDecimaliserM
+  def programM: CommandLineArguments => SafeExec[Result] = readUserNameM >=> connectToDatabaseM >=> readFromDatabaseM
 
   trait Monad[F[_]] {
     // monad part
@@ -24,39 +30,27 @@ object Lesson1 {
     def fmap[A, B]: (A => B) => F[A] => F[B]
   }
 
-  implicit class MonadRich[A, F[_] : Monad](left: F[A]) {
-    def `>>=`[B](f: A => F[B]): F[B] = {
-      val monad = implicitly[Monad[F]]
-      monad.bind(f)(left)
-    }
-
-    def `<&>`[B](f: A => B): F[B] = {
-      val monad = implicitly[Monad[F]]
-      monad.fmap(f)(left)
-    }
-  }
-
   // convenience functions
   implicit class MonadicComposition[T, K, F[_] : Monad](leftM: T => F[K]) {
     def `>=>`[L](f: K => F[L]): T => F[L] = { t =>
-      leftM(t) >>= f
+      implicitly[Monad[F]].bind(f)(leftM(t))
     }
   }
 
   // a monad for demonstration
-  case class Consoliser[T](value: T)
-  implicit val consoliserMonad: Monad[Consoliser] = new Monad[Consoliser] {
-    override def bind[A, B]: (A => Consoliser[B]) => Consoliser[A] => Consoliser[B] = f => {
-      case Consoliser(v) => f(v)
+  case class SafeExec[T](value: T)
+  implicit val consoliserMonad: Monad[SafeExec] = new Monad[SafeExec] {
+    override def bind[A, B]: (A => SafeExec[B]) => SafeExec[A] => SafeExec[B] = f => {
+      case SafeExec(v) => f(v)
     }
-    override def fmap[A, B]: (A => B) => Consoliser[A] => Consoliser[B] = f => {
-      case Consoliser(v) => println("BOOM"); Consoliser(f(v))
+    override def fmap[A, B]: (A => B) => SafeExec[A] => SafeExec[B] = f => {
+      case SafeExec(v) => println("BOOM"); SafeExec(f(v))
     }
   }
 
   def main(args: Array[String]): Unit = {
     // run
-    println(megaFuncM(5.0).value)
+    println(programM(CommandLineArguments(Nil)).value)
   }
 
 }

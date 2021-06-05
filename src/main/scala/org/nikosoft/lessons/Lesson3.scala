@@ -1,7 +1,8 @@
 package org.nikosoft.lessons
 
 import org.nikosoft.lessons.Lesson1._
-import org.nikosoft.lessons.Lesson2.ScalaMonadWrapper._
+import org.nikosoft.lessons.Lesson2._
+import org.nikosoft.lessons.Lesson2.MonadRich
 import org.nikosoft.lessons.Lesson3.Or._
 
 import scala.util.{Failure, Success, Try}

@@ -4,7 +4,7 @@ import org.nikosoft.lessons.Lesson4.{Applicative, ApplicativeRich}
 import org.nikosoft.lessons.Lesson6.Compute.Compute
 import Lesson6.Compute._
 import org.nikosoft.lessons.Lesson1._
-import org.nikosoft.lessons.Lesson2.ScalaMonadWrapper._
+import org.nikosoft.lessons.Lesson2._
 
 import scala.util.Try
 
