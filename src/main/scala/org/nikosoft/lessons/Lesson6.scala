@@ -3,7 +3,8 @@ package org.nikosoft.lessons
 import org.nikosoft.lessons.Lesson4.{Applicative, ApplicativeRich}
 import org.nikosoft.lessons.Lesson6.Compute.Compute
 import Lesson6.Compute._
-import org.nikosoft.lessons.Lesson1.Monad
+import org.nikosoft.lessons.Lesson1._
+import org.nikosoft.lessons.Lesson2.ScalaMonadWrapper._
 
 import scala.util.Try
 
@@ -24,6 +25,7 @@ object Lesson6 {
     case class Errors(errors: List[String]) extends Compute[Nothing]
 
     def pure[T](t: T): Compute[T] = Pure(t)
+    def someMust[T](t: Option[T]): Compute[T] = PureMustSome(t)
     def error[T](err: String): Compute[T] = Error(err)
   }
 
@@ -59,8 +61,14 @@ object Lesson6 {
 
   def main(args: Array[String]): Unit = {
     def func: String => String => Unit = _ => _ => ()
-    val result = pure(func) <*> error("wrong param 1") <*> error("wrong param 2")
-    println(result)
+    val result1 = pure(func) <*> error("wrong param 1") <*> error("wrong param 2")
+    println(result1)
+
+    val result2 = for {
+      i <- someMust(Some(10))
+      res <- pure(i + 10)
+    } yield res
+    println(result2)
   }
 
 }
