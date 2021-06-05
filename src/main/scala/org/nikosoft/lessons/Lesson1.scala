@@ -39,12 +39,12 @@ object Lesson1 {
 
   // a monad for demonstration
   case class SafeExec[T](value: T)
-  implicit val consoliserMonad: Monad[SafeExec] = new Monad[SafeExec] {
+  implicit val safeExecMonad: Monad[SafeExec] = new Monad[SafeExec] {
     override def bind[A, B]: (A => SafeExec[B]) => SafeExec[A] => SafeExec[B] = f => {
       case SafeExec(v) => f(v)
     }
     override def fmap[A, B]: (A => B) => SafeExec[A] => SafeExec[B] = f => {
-      case SafeExec(v) => println("BOOM"); SafeExec(f(v))
+      case SafeExec(v) => SafeExec(f(v))
     }
   }
 
