@@ -5,12 +5,10 @@ import scala.language.implicitConversions
 
 object Lesson2 {
 
-  class ScalaMonadWrapper[T, F[_] : Monad](m: F[T]) {
+  implicit class ScalaMonadWrapper[T, F[_] : Monad](m: F[T]) {
     def flatMap[B](f: T => F[B]): F[B] = implicitly[Monad[F]].bind(f)(m)
     def map[B](f: T => B): F[B] = implicitly[Monad[F]].fmap(f)(m)
   }
-
-  implicit def scalaify[A, F[_] : Monad](f: F[A]): ScalaMonadWrapper[A, F] = new ScalaMonadWrapper[A, F](f)
 
   implicit class MonadRich[A, F[_] : Monad](left: F[A]) {
     def `>>=`[B](f: A => F[B]): F[B] = {
@@ -25,16 +23,18 @@ object Lesson2 {
   }
 
   def main(args: Array[String]): Unit = {
-    val a = SafeExec(CommandLineArguments(Nil)).flatMap(readUserNameM).flatMap(connectToDatabaseM).flatMap(readFromDatabaseM).value
+    val a: SafeExec[Result] = readUserNameM[SafeExec](CommandLineArguments(Nil)).flatMap(connectToDatabaseM[SafeExec]).flatMap(readFromDatabaseM[SafeExec])
     println(s"Effectful function via flatMap result $a")
 
-    for {
-      name      <- readUserNameM(CommandLineArguments(Nil))
-      dbAdapter <- connectToDatabaseM(name)
-      result    <- readFromDatabaseM(dbAdapter)
+    val result: SafeExec2[Result] = for {
+      name      <- readUserNameM[SafeExec2](CommandLineArguments(Nil))
+      dbAdapter <- connectToDatabaseM[SafeExec2](name)
+      result    <- readFromDatabaseM[SafeExec2](dbAdapter)
     } yield result
 
-    val programM = readUserNameM(CommandLineArguments(Nil)) >>= connectToDatabaseM >>= readFromDatabaseM
+    println(result)
+
+    val programM = readUserNameM[SafeExec](CommandLineArguments(Nil)) >>= connectToDatabaseM[SafeExec] >>= readFromDatabaseM[SafeExec]
     println(programM)
   }
 

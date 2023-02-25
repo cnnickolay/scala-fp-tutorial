@@ -3,6 +3,7 @@ package org.nikosoft.lessons
 import org.nikosoft.lessons.Lesson3.Or
 import org.nikosoft.lessons.Lesson3.Or.{good, _}
 import org.nikosoft.lessons.Lesson4.{Applicative, Person, createPerson}
+import Lesson2._
 
 // making applicative harvesting all errors
 object Lesson5 {
@@ -10,7 +11,6 @@ object Lesson5 {
   implicit val orApplicative: Applicative[Or] = new Applicative[Or] {
     override def bind[A, B]: (A => Or[B]) => Or[A] => Or[B] = orM.bind
     override def fmap[A, B]: (A => B) => Or[A] => Or[B] = orM.fmap
-    override def pure[T]: T => Or[T] = good
     override def `<*>`[A, B](f: Or[A => B], fa: Or[A]): Or[B] = {
       val fb = super.`<*>`(f, fa)
       (f, fb) match {
@@ -19,15 +19,27 @@ object Lesson5 {
         case _ => fb
       }
     }
+    override def pure[T](value: T): Or[T] = good(value)
   }
 
   def main(args: Array[String]): Unit = {
-    val person: Or[Person] = good(createPerson) <*>
-      ugly(throw new Throwable("name is wrong")) <*>
-      ugly(throw new Throwable("lastname is wrong")) <*>
-      good(Option("0928344")) <*>
-      bad(new Throwable("address does not exist"))
-    println(person)
+//    val person: Or[Person] = good(createPerson) <*>
+//      ugly(throw new Throwable("name is wrong")) <*>
+//      ugly(throw new Throwable("lastname is wrong")) <*>
+//      good(Option("0928344")) <*>
+//      bad(new Throwable("address does not exist"))
+
+
+    val result = for {
+      person <- good(createPerson) <*>
+                  ugly(throw new Throwable("name is wrong")) <*>
+                  ugly(throw new Throwable("lastname is wrong")) <*>
+                  good(Option("0928344")) <*>
+                  bad(new Throwable("address does not exist"))
+      res <- ugly(person.address + "blablad")
+    } yield res
+
+    println(result)
   }
 
 }

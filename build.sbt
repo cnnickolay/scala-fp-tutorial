@@ -8,3 +8,4 @@ addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.0" cross CrossVersi
 
 scalacOptions += "-Xfatal-warnings"
 scalacOptions += "-feature"
+

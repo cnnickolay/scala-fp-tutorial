@@ -3,7 +3,7 @@ package org.nikosoft.lessons
 import org.nikosoft.lessons.Lesson4.{Applicative, ApplicativeRich}
 import org.nikosoft.lessons.Lesson6.Compute.Compute
 import Lesson6.Compute._
-import org.nikosoft.lessons.Lesson1._
+//import org.nikosoft.lessons.Lesson1._
 import org.nikosoft.lessons.Lesson2._
 
 import scala.util.Try
@@ -48,7 +48,6 @@ object Lesson6 {
       case e: Errors => e
       case f: Failure => f
     }
-    override def pure[T]: T => Compute[T] = Pure(_)
     override def `<*>`[A, B](f: Compute[A => B], fa: Compute[A]): Compute[B] = {
       val fb = super.`<*>`(f, fa)
       (f, fb) match {
@@ -57,6 +56,8 @@ object Lesson6 {
         case _ => fb
       }
     }
+
+    override def pure[T](value: T): Compute[T] = Pure(value)
   }
 
   def main(args: Array[String]): Unit = {

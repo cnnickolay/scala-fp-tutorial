@@ -35,6 +35,8 @@ object Lesson3 {
         case bM: Bad => bM
         case uM: Ugly[A] => Ugly(f(uM.value))
       }
+
+      override def pure[T](value: T): Or[T] = Good(value)
     }
 
     def good[T](v: T): Or[T] = Good(v)
@@ -50,7 +52,8 @@ object Lesson3 {
       r <- ugly(i / 0)
       k <- good(r)
       res <- ugly(k + 10)
-    } yield res + 10
+      resUltimate <- good(res)
+    } yield resUltimate
 
     println(result)
   }
